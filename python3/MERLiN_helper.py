@@ -52,7 +52,7 @@ def complementbasis(w):
 #probability of a better vector
 def pobv(center,vector):
     a = (center.shape[0]-1)/2
-    b = 1/2
+    b = 0.5
     #ensure both vectors are normed -> r=1
     center = normed(center)
     vector = normed(vector)

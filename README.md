@@ -26,7 +26,9 @@ The latter two algorithms may be applied to any type of timeseries data while th
 
 ## python2
 
-Not yet implemented.
+Currently the python3 implementation is also compatible with python2. Tested with python2.7.6.
+
+`python2 MERLiN_example` or `%run MERLiN_example.py` in ipython2 for a simple example of use.
 
 
 ## matlab
