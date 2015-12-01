@@ -16,10 +16,11 @@ The latter two algorithms may be applied to any type of timeseries data while th
 
 ## python3
 
-`%run MERLiN_example.py` in IPython for a simple example of use.
+`python3 MERLiN_example` or `%run MERLiN_example.py` in ipython3 for a simple example of use.
 
 * MERLiNbp and MERLiNbpicoh not yet implemented.
 * Requires numpy, scipy, theano (install via pip3).
+* Tested with python3.4.3.
 * No validation of user input to functions.
 
 
