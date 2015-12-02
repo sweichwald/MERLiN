@@ -2,6 +2,35 @@ from MERLiN_helper import *
 import numpy as np
 
 
+#performance measures (cf. Section III.B.)
+'''
+Input to the following two functions
+    wG0: ground truth vector to compare against
+    w: vector to assess
+Output
+    probability of a better vector than w
+        or
+    angular distance between wG0 and w
+'''
+
+#probability of a better vector
+def pobv(wG0,w):
+    a = (wG0.shape[0]-1)/2
+    b = 0.5
+    #enswG0re both vs are normed -> r=1
+    wG0 = normed(wG0)
+    w = normed(w)
+    h = 1 - np.abs( wG0.T.dot(w) )
+    x = h*(2-h)
+    #betainc(a,b,x) computes the regularized incomplete beta function I_x(a,b)
+    #http://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.special.betainc.html#scipy.special.betainc
+    return betainc(a,b,x)[0,0]
+
+#angular distance
+def andi(wG0, w):
+    return min(angle(wG0,w), angle(-wG0,w))
+
+
 #Stiefel gradient ascent (cf. Algorithm 1)
 '''
 Input

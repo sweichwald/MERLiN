@@ -47,27 +47,9 @@ def complementbasis(w):
     return gsortho(V) #assumes provided vectors w were already orthonormal, otherwise this would change these
 
 
-#performance measures (cf. Section III.B.)
-
-#probability of a better vector
-def pobv(center,vector):
-    a = (center.shape[0]-1)/2
-    b = 0.5
-    #ensure both vectors are normed -> r=1
-    center = normed(center)
-    vector = normed(vector)
-    h = 1 - np.abs( center.T.dot(vector) )
-    x = h*(2-h)
-    #betainc(a,b,x) computes the regularized incomplete beta function I_x(a,b)
-    #http://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.special.betainc.html#scipy.special.betainc
-    return betainc(a,b,x)[0,0]
-
+#angle between u and v in radians
 def angle(u, v):
     return np.asscalar(np.arccos(np.clip(np.dot(normed(u).T, normed(v)), -1 , 1)))
-
-#angular distance
-def andi(u, v):
-    return min(angle(u,v), angle(-u,v))
 
 
 #from V take Stiefel ascent step defined by the gradient G and step size lbd

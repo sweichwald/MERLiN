@@ -1,5 +1,4 @@
-from MERLiN_main import genDataset, MERLiN
-from MERLiN_helper import pobv, andi
+from MERLiN_main import pobv, andi, genDataset, MERLiN
 
 
 #generate dataset with the following parameters
