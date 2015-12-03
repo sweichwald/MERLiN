@@ -128,8 +128,8 @@ def getMERLiNObjective():
     return function([s,c,F,w], [objective, gradient])
 
 
-#set up MERLiN objective function and its gradient as theano function
-#(cf. Algorithm 4 (plus=False) and 5 (plus=True))
+#set up MERLiNbp objective function and its gradient as theano function
+#(cf. Algorithm 4; optional plus=True for MERLiNbpicoh variant)
 def getMERLiNbpObjective(plus=False):
     s = T.matrix('s') #m x 1
     vFr = T.matrix('vFr') #m x n'
@@ -163,9 +163,28 @@ def getMERLiNbpObjective(plus=False):
     #precision matrix
     prec = Tlina.matrix_inverse(S)
 
-    #objective and gradient
-    objective = T.abs_(prec[1,2])-T.abs_(prec[0,2])
+    #objective and gradient for MERLiNbpicoh
+    if plus:
+        #complex row-wise vdot
+        #(x+yi)(u+vi) = (xu-yv)+(xv+yu)i
+        #vdot i.e. -v instead of +v
+        vdot  = lambda x,y,u,v:  x*u+y*v
+        vdoti = lambda x,y,u,v: -x*v+y*u
+        cross  = lambda x,y,u,v: T.sum(vdot(x,y,u,v), axis=0) / m
+        crossi = lambda x,y,u,v: T.sum(vdoti(x,y,u,v), axis=0) / m
+        sqrtcross = lambda x,y: T.sqrt(cross(x,y,x,y)+crossi(x,y,x,y))
+        icoherency = crossi(vFr,vFi,wFr,wFi) / ( sqrtcross(vFr,vFi)*sqrtcross(wFr,wFi) ) #n'
+        objective = T.abs_(T.sum(icoherency))*T.abs_(prec[1,2])-T.abs_(prec[0,2])
+    #objective and gradient for MERLiNb
+    else:
+        objective = T.abs_(prec[1,2])-T.abs_(prec[0,2])
     gradient = T.grad(objective, w)
 
     #return compiled function
     return function([s,vFi,vFr,Fi,Fr,w,n], [objective, gradient])
+
+
+#set up MERLiNbpicoh objective function and its gradient as theano function
+#(cf. Algorithm 5)
+def getMERLiNbpicohObjective():
+    return getMERLiNbpObjective(plus=True)
