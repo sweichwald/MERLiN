@@ -126,3 +126,46 @@ def getMERLiNObjective():
 
     #return compiled function
     return function([s,c,F,w], [objective, gradient])
+
+
+#set up MERLiN objective function and its gradient as theano function
+#(cf. Algorithm 4 (plus=False) and 5 (plus=True))
+def getMERLiNbpObjective(plus=False):
+    s = T.matrix('s') #m x 1
+    vFr = T.matrix('vFr') #m x n'
+    vFi = T.matrix('vFi') #m x n'
+    Fr = T.matrix('Fr') #d x (m*n')
+    Fi = T.matrix('Fi') #d x (m*n')
+    w = T.matrix('w') #d x 1
+    n = T.scalar('n')
+    m = s.shape[0]
+
+    #linear combination
+    wFr = T.reshape(w.T.dot(Fr), (m,-1)) #m x n'
+    wFi = T.reshape(w.T.dot(Fi), (m,-1)) #m x n'
+
+    #replace zeros, since we're taking logs
+    unzero = lambda x: T.switch(T.eq(x, 0), 1, x)
+
+    #bandpower
+    bp = lambda re, im: T.reshape(T.mean(T.log( unzero(T.sqrt(re*re + im*im)) )-T.log(n), axis=1), (m,1))
+    wFbp = bp(wFr,wFi) #m x 1
+    vFbp = bp(vFr,vFi) #m x 1
+
+    #centering matrix
+    I = T.eye(m,m)
+    H = I - T.mean(I)
+    #column-centered data
+    X = H.dot( T.concatenate([s,vFbp,wFbp], axis=1) ) #m x 3
+
+    #covariance matrix
+    S = X.T.dot(X) / (m-1)
+    #precision matrix
+    prec = Tlina.matrix_inverse(S)
+
+    #objective and gradient
+    objective = T.abs_(prec[1,2])-T.abs_(prec[0,2])
+    gradient = T.grad(objective, w)
+
+    #return compiled function
+    return function([s,vFi,vFr,Fi,Fr,w,n], [objective, gradient])

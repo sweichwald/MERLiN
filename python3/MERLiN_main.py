@@ -149,6 +149,45 @@ def bpPreprocessing(Ftw,v,fs,omega1,omega2):
     return Vi, Vr, Fi, Fr
 
 
+#MERLiNbp (cf. Algorithm 4)
+'''
+Input
+    S: (m x 1) vector of samples of S
+    Ftw: (d x m x n) tensor containing timeseries of length n (d channels, m trials)
+    v: (d x 1) vector corresponding to C1 in S->C1
+    fs: sampling rate
+    omega1, omega2: low/high limit of desired frequency band
+Optional input
+    preprocessed: dict of already preprocessed data Vi, Vr, Fi, Fr, n
+Output
+    w: found solution after maxsteps steps or when the stopping criterion was met
+    converged: whether the stopping criterion was met
+    curob: value of f at w
+'''
+def MERLiNbp(S,Ftw,v,fs,omega1,omega2,preprocessed = False):
+    if preprocessed:
+        Vi, Vr, Fi, Fr, n = preprocessed
+    else:
+        Vi, Vr, Fi, Fr = bpPreprocessing(Ftw,v,fs,omega1,omega2)
+        n = Ftw.shape[2]
+
+    #rearrange (d x m x n') tensors Fi/Fr into (d x m*n') matrices
+    d = Fi.shape[0]
+    Fi = Fi.reshape(d,-1)
+    Fr = Fr.reshape(d,-1)
+
+    #set function and derivative
+    func = getMERLiNbpObjective()
+    f = lambda w: func(S,Vi,Vr,Fi,Fr,w,n)[0]
+    fprime = lambda w: func(S,Vi,Vr,Fi,Fr,w,n)[1]
+
+    #maximise f, fprime
+    w0 = normed(np.random.randn(v.shape[0],1))
+    w, converged, curob = stiefasc(f,fprime,w0)
+
+    return w, converged, curob
+
+
 #Generate synthetic dataset (cf. Algorithm 6)
 '''
 Input
