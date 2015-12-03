@@ -4,6 +4,7 @@ import theano.tensor as T
 import theano.sandbox.linalg as Tlina
 from theano import function
 from scipy.special import betainc
+from scipy import io
 
 
 #normalise vector x
@@ -44,12 +45,47 @@ def null(A, eps=1e-15):
 #complements w to a full basis
 def complementbasis(w):
     V = np.concatenate((w,null(w)), axis=1)
-    return gsortho(V) #assumes provided vectors w were already orthonormal, otherwise this would change these
+    return gsortho(V) #assumes provided vectors w were already orthonormal
 
 
 #angle between u and v in radians
 def angle(u, v):
     return np.asscalar(np.arccos(np.clip(np.dot(normed(u).T, normed(v)), -1 , 1)))
+
+
+#generate timeseries tensor Ftw from given data matrix F (cf. Section III.A.)
+def genToyTimeseriesTensor(F,v,fs,n,omega1,omega2):
+    #random (time)series
+    d,m = F.shape
+    Ftw = np.random.randn(d,m,n)
+
+    #frequency range
+    a = min([k for k in range(1,int(np.ceil(n/2))+1) if k*fs/n > omega1])-1
+    b = max([k for k in range(1,int(np.ceil(n/2))+1) if k*fs/n <= omega2])
+
+    #loop through trials x channels and match log-bandpower
+    for trial in range(0,m):
+        for channel in range(0,d):
+            x = Ftw[channel,trial,:]
+            #center, Hanning window, fft
+            hanning = 0.5*(1-np.cos( (2*np.pi*np.arange(0,n)) / (n-1) ))
+            prevmean = np.mean(x)
+            x = (x - prevmean) * hanning
+            fft = np.fft.rfft(x)
+
+            curbp = np.mean( np.log( np.abs(fft[a:b]) ) - np.log(n) )
+            aimbp = F[channel,trial]
+
+            lbd = np.exp(aimbp-curbp)
+
+            #bump each coefficient by factor lbd
+            for f in range(0,len(fft)):
+                fft[f] = np.abs(fft[f])*lbd*fft[f]/np.abs(fft[f])
+
+            hanning[hanning == 0] = 1
+            Ftw[channel,trial,:] = np.fft.irfft(fft) / hanning + prevmean
+
+    return Ftw
 
 
 #from V take Stiefel ascent step defined by the gradient G and step size lbd

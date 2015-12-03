@@ -12,12 +12,11 @@ Output
         or
     angular distance between wG0 and w
 '''
-
 #probability of a better vector
 def pobv(wG0,w):
     a = (wG0.shape[0]-1)/2
     b = 0.5
-    #enswG0re both vs are normed -> r=1
+    #ensure both vectors are normed -> r=1
     wG0 = normed(wG0)
     w = normed(w)
     h = 1 - np.abs( wG0.T.dot(w) )
@@ -25,7 +24,6 @@ def pobv(wG0,w):
     #betainc(a,b,x) computes the regularized incomplete beta function I_x(a,b)
     #http://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.special.betainc.html#scipy.special.betainc
     return betainc(a,b,x)[0,0]
-
 #angular distance
 def andi(wG0, w):
     return min(angle(wG0,w), angle(-wG0,w))
@@ -95,6 +93,62 @@ def MERLiN(S,F,v):
     return P.T.dot(w), converged, curob
 
 
+#preprocessing for bp algorithms (cf. Algorithm 3)
+'''
+Input
+    Ftw: (d x m x n) tensor containing timeseries of length n (d channels, m trials)
+    v: (d x 1) vector corresponding to C1 in S->C1
+    fs: sampling rate
+    omega1, omega2: low/high limit of desired frequency band
+Output
+    Vi, Vr: (m x n') matrix of imaginary/real part of the relevant n' fourier coefficients
+            of the signal corresponding to v in m trials
+    Fi, Fr: (d x m x n') tensor of imaginary/real part of the relevant n' fourier coefficients
+            of each of the d channels in m trials
+'''
+def bpPreprocessing(Ftw,v,fs,omega1,omega2):
+    d,m,n = Ftw.shape
+
+    #frequency range
+    a = min([k for k in range(1,int(np.ceil(n/2))+1) if k*fs/n > omega1])-1
+    b = max([k for k in range(1,int(np.ceil(n/2))+1) if k*fs/n <= omega2])
+
+    Vi = np.zeros([m,b-a])
+    Vr = np.zeros([m,b-a])
+    Fi = np.zeros([d,m,b-a])
+    Fr = np.zeros([d,m,b-a])
+
+    #hanning window
+    hanning = 0.5*(1-np.cos( (2*np.pi*np.arange(0,n)) / (n-1) ))
+
+    #loop through trials
+    for trial in range(0,m):
+        F = Ftw[:,trial,:] #d x n
+
+        #extract v signal
+        V = v.T.dot(F)
+
+        #center, Hanning window, fft
+        V = (V - np.mean(V)) * hanning
+        V = np.fft.rfft(V)[0,a:b]
+        Vi[trial,:] = np.imag(V)
+        Vr[trial,:] = np.real(V)
+
+        #remove v signal
+        P = complementbasis(v)[:,1:].T
+        F = P.T.dot(P.dot(F))
+
+        #loop through channels
+        for channel in range(0,d):
+            x = F[channel,:]
+            x = (x - np.mean(x)) * hanning
+            x = np.fft.rfft(x)[a:b]
+            Fi[channel,trial,:] = np.imag(x)
+            Fr[channel,trial,:] = np.real(x)
+
+    return Vi, Vr, Fi, Fr
+
+
 #Generate synthetic dataset (cf. Algorithm 6)
 '''
 Input
@@ -103,15 +157,21 @@ Input
     m: number of samples
     a: noise parameter
     b: hidden confounding parameter
+Optional input
+    eye: random orthonormal mixing (False) or no/identity mixing (True)
 Output
     S: (m x 1) vector of samples of S
     F: (d x m) matrix of linear mixture samples
     v: (d x 1) vector corresponding to C1 in S->C1
     wG0: ground truth (d x 1) vector to recover C2
 '''
-def genDataset(T,d,m,a,b):
-    #generate random orthogonal d x d matrix
-    A = gsortho( np.random.randn(d,d) )
+def genDataset(T,d,m,a,b,eye=False):
+    if eye:
+        A = np.eye(d)
+    else:
+        #generate random orthogonal d x d matrix
+        A = gsortho( np.random.randn(d,d) )
+
     #set v and wG0
     v = A[:,0:1]
     wG0 = A[:,1:2]
