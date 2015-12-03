@@ -1,7 +1,5 @@
 # MERLiN: Mixture Effect Recovery in Linear Networks
 
-**Currently setting-up this repo.** Come back later for python3/python2/matlab implementations or send an email to *merlin-{python3,python2,matlab}* (at) *sweichwald* (dot) *de* and you'll get notified once the respective code is available.
-
 MERLiN aims at recovering/constructing from an observed linear mixture a variable that is a causal effect of another given variable.
 
 This repository will contain implementations of the following algorithms:
@@ -18,7 +16,6 @@ The latter two algorithms may be applied to any type of timeseries data while th
 
 `python3 MERLiN_example` or `%run MERLiN_example.py` in ipython3 for a simple example of use.
 
-* MERLiNbp and MERLiNbpicoh not yet implemented.
 * Requires numpy, scipy, theano (install via pip3).
 * Tested with python3.4.3.
 * No validation of user input to functions.
@@ -33,4 +30,5 @@ Currently the python3 implementation is also compatible with python2. Tested wit
 
 ## matlab
 
-Not yet implemented.
+Following soon.
+Send an email to *merlin-matlab* (at) *sweichwald* (dot) *de* and you'll get notified once the matlab implementation is available.
