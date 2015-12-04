@@ -37,6 +37,34 @@ The latter two algorithms may be applied to any type of timeseries data while th
 
 `python3 MERLiN_example` or `%run MERLiN_example.py` in ipython3 for a simple example of use.
 
+### get going
+
+The file `MERLiN_main` provides the main functionality --- in a nutshell:
+
+```python
+from MERLiN_main import MERLiN, MERLiNbp, MERLiNbpicoh
+
+#the basic algorithm
+#S: (m x 1) vector of samples of S
+#F: (d x m) matrix of linear mixture samples
+#v: (d x 1) vector corresponding to C1 in S->C1
+res = MERLiN(S,F,v)
+
+#the bp algorithms for iid sampled timeseries chunks
+#S: (m x 1) vector of samples of S
+#Ftw: (d x m x n) tensor containing timeseries of length n (d channels, m trials)
+#v: (d x 1) vector corresponding to C1 in S->C1
+#fs: sampling rate
+#omega1, omega2: low/high limit of desired frequency band
+res = MERLiNbp(S,Ftw,v,fs,omega1,omega2)
+res = MERLiNbpicoh(S,Ftw,v,fs,omega1,omega2)
+
+#the solution vector
+w = res[0]
+```
+
+### notes
+
 * Requires numpy, scipy, theano (install via pip3).
 * Tested with python3.4.3.
 * No validation of user input to functions.
