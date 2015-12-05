@@ -1,3 +1,5 @@
+## python
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -57,3 +59,22 @@ docs/_build/
 
 # PyBuilder
 target/
+
+
+
+## matlab
+
+# Windows default autosave extension
+*.asv
+
+# OSX / *nix default autosave extension
+*.m~
+
+# Compiled MEX binaries (all platforms)
+*.mex*
+
+# Simulink Code Generation
+slprj/
+
+# do not include adigator in repo
+matlab/adigator/
