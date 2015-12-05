@@ -48,9 +48,10 @@ def stiefasc(f,fprime,w,tol=1e-16,maxsteps=500,lbd=1):
     curob = f(w)
     for k in range(0,maxsteps):
         #while there is no increase, i.e. step too large
-        while f(stiefel_update(w, fprime(w), lbd)) < curob:
-            lbd = lbd*.5
-        w = stiefel_update(w, fprime(w), lbd)
+        curlbd = lbd
+        while f(stiefel_update(w, fprime(w), curlbd)) < curob:
+            curlbd = curlbd*.5
+        w = stiefel_update(w, fprime(w), curlbd)
 
         newob = f(w)
 
