@@ -269,10 +269,10 @@ def genDataset(T,d,m,a,b,eye=False):
     #SEM
     C = np.random.randn(d,m)
     C = C + mu
-    C[0,:] =   C[0,:] + S[0] + b*h[0]
-    C[1,:] = a*(C[1,:]-mu[1]) + mu[1] + C[0,:]
-    C[2,:] =   C[2,:] + S[0]
-    C[3,:] =   C[3,:] + b*h[0]
+    C[0:1,:] =   C[0:1,:] + S.T + b*h.T
+    C[1:2,:] = a*(C[1:2,:]-mu[1]) + mu[1] + C[0:1,:]
+    C[2:3,:] =   C[2:3,:] + S.T
+    C[3:4,:] =   C[3:4,:] + b*h.T
 
     #orthogonal mixing
     F = A.dot(C)
