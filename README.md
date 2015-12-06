@@ -31,7 +31,9 @@ This repository will contain implementations of the following algorithms:
 
 The latter two algorithms may be applied to any type of timeseries data while they are tailored to analysis of EEG data.
 
+
 ---
+
 
 ## python3
 
@@ -80,6 +82,23 @@ The file [MERLiN_example.py](python3/MERLiN_example.py) provides a simple exampl
 ## matlab
 
 The file [MERLiN_example.m](matlab/MERLiN_example.m) provides a simple example of use --- call `MERLiN_example` in matlab.
+
+### get going
+
+The file [MERLiN.m](matlab/MERLiN.m) provides the MERLiN function --- in a nutshell:
+
+```matlab
+% the basic algorithm
+% S: (m x 1) vector of samples of S
+% F: (d x m) matrix of linear mixture samples
+% v: (d x 1) vector corresponding to C1 in S->C1
+[w, converged, curob] = MERLiN(S,F,v)
+
+% the solution vector
+w
+```
+
+### notes
 
 * Requires [ADiGator](http://adigator.sourceforge.net/) (tested with V1.1.1). Download and add to matlab search path via `addpath(genpath('/path/to/adigator'))`.
 * Tested with matlab R2014a.
