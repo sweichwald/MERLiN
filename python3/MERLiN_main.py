@@ -31,8 +31,8 @@ def andi(wG0, w):
     return min(angle(wG0,w), angle(-wG0,w))
 
 
-#Stiefel gradient ascent (cf. Algorithm 1)
 '''
+Stiefel gradient ascent (cf. Algorithm 1)
 Input
     f, fprime: objective function and its gradient as theano functions
     w: initial point
@@ -66,8 +66,8 @@ def stiefasc(f,fprime,w,tol=1e-16,maxsteps=500,lbd=1):
     return w, converged, curob
 
 
-#MERLiN (cf. Algorithm 2)
 '''
+MERLiN (cf. Algorithm 2)
 Input
     S: (m x 1) vector of samples of S
     F: (d x m) matrix of linear mixture samples
@@ -116,8 +116,8 @@ def MERLiN(S,F,v):
     return P.T.dot(w), converged, curob
 
 
-#preprocessing for bp algorithms (cf. Algorithm 3)
 '''
+preprocessing for bp algorithms (cf. Algorithm 3)
 Input
     Ftw: (d x m x n) tensor containing timeseries of length n (d channels, m trials)
     v: (d x 1) vector corresponding to C1 in S->C1
@@ -172,8 +172,8 @@ def bpPreprocessing(Ftw,v,fs,omega1,omega2):
     return Vi, Vr, Fi, Fr
 
 
-#MERLiNbp (cf. Algorithm 4)
 '''
+MERLiNbp (cf. Algorithm 4)
 Input
     S: (m x 1) vector of samples of S
     Ftw: (d x m x n) tensor containing timeseries of length n (d channels, m trials)
@@ -211,8 +211,8 @@ def MERLiNbp(S,Ftw,v,fs,omega1,omega2,preprocessed = False):
     return w, converged, curob
 
 
-#MERLiNbpicoh (cf. Algorithm 5)
 '''
+MERLiNbpicoh (cf. Algorithm 5)
 Input
     S: (m x 1) vector of samples of S
     Ftw: (d x m x n) tensor containing timeseries of length n (d channels, m trials)
@@ -250,8 +250,8 @@ def MERLiNbpicoh(S,Ftw,v,fs,omega1,omega2,preprocessed = False):
     return w, converged, curob
 
 
-#Generate synthetic dataset (cf. Algorithm 6)
 '''
+Generate synthetic dataset (cf. Algorithm 6)
 Input
     T: gaussian or binary dataset
     d: dimension
