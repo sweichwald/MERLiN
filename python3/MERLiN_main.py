@@ -1,5 +1,7 @@
 from MERLiN_helper import *
 import numpy as np
+import theano.tensor as T
+from theano import function
 
 
 #performance measures (cf. Section III.B.)
@@ -80,12 +82,32 @@ def MERLiN(S,F,v):
     C = F.T.dot(v)
     #replace F, i.e. remove v signal
     P = complementbasis(v)[:,1:].T
-    F = P.dot(F)
+    Fdat = P.dot(F)
 
     #set function and derivative
-    func = getMERLiNObjective()
-    f = lambda w: func(S,C,F,w)[0]
-    fprime = lambda w: func(S,C,F,w)[1]
+    w = T.matrix('w') #(d-1) x 1
+    F = T.matrix('F') #(d-1) x m
+    O = T.matrix('O') #1 x m
+    Q = T.matrix('Q') #1 x m
+    R = T.matrix('R') #m x m
+    objective = ( ( T.abs_(Q.dot(F.T.dot(w))) - T.abs_(O.dot(F.T.dot(w))) ) / T.abs_(w.T.dot(F.dot(R.dot(F.T.dot(w))))) )[0,0]
+    gradient = T.grad(objective, w)
+    func = function([w,F,O,Q,R], [objective, gradient])
+    f = lambda w: func(w,Fdat,Odat,Qdat,Rdat)[0]
+    fprime = lambda w: func(w,Fdat,Odat,Qdat,Rdat)[1]
+
+    #set O,Q,R
+    m = S.shape[0]
+    H = np.eye(m) - np.ones((m,m))/m
+    Odat = ( S.T.dot(H.dot(C.dot(C.T))) - C.T.dot(H.dot(C.dot(S.T))) ).dot(H)
+    Qdat = ( S.T.dot(H.dot(C.dot(S.T))) - S.T.dot(H.dot(S.dot(C.T))) ).dot(H)
+    r1 = (S.T.dot(H.dot(S.dot(C.T.dot(H.dot(C))))))*np.eye(m)
+    r2 = S.T.dot(H.dot(C))*C.dot(S.T)
+    r3 = S.T.dot(H.dot(C))*S.dot(C.T)
+    r4 = C.T.dot(H.dot(C))*S.dot(S.T)
+    r5 = (S.T.dot(H.dot(C))**2)*np.eye(m)
+    r6 = S.T.dot(H.dot(S))*C.dot(C.T)
+    Rdat = (H.dot( r1 + r2 + r3 - r4 - r5 - r6 )).dot(H)
 
     #maximise f, fprime
     w0 = normed(np.random.randn(v.shape[0]-1,1))
