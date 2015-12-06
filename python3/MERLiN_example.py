@@ -5,7 +5,10 @@ from MERLiN_helper import genToyTimeseriesTensor
 #function for printing results
 def printres(algo,T,d,m,a,b,w,wG0):
     print('Algorithm: ' + algo + '.')
-    print('On a timeseries toy dataset with parameters T=' + T + ', d=' + str(d) + ', m=' + str(m) + ', a=' + str(a) + ', b=' + str(b))
+    timeseries = ''
+    if algo is not 'MERLiN':
+        timeseries = 'timeseries '
+    print('On a ' + timeseries + 'toy dataset with parameters T=' + T + ', d=' + str(d) + ', m=' + str(m) + ', a=' + str(a) + ', b=' + str(b))
     print('and ground truth vector wG0=' + str(wG0.T))
     print('MERLiN yielded the vector w=' + str(w.T) + '.')
     print('The angular distance is ' + str(andi(wG0,w)) + 'rad.')
