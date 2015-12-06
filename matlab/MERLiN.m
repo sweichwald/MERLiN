@@ -18,10 +18,10 @@ checkADiGator();
 options = adigatorOptions('OVERWRITE',1);
 w = adigatorCreateDerivInput([d-1 1],'w');
 Fdat = adigatorCreateAuxInput([d-1 m]);
-P = adigatorCreateAuxInput([1 m]);
+O = adigatorCreateAuxInput([1 m]);
 Q = adigatorCreateAuxInput([1 m]);
 R = adigatorCreateAuxInput([m m]);
-evalc('adigator(''objective_MERLiN'',{w,Fdat,P,Q,R},''gradient_MERLiN'',options);');
+evalc('adigator(''objective_MERLiN'',{w,Fdat,O,Q,R},''gradient_MERLiN'',options);');
 
 %  set C
 C = F'*v;
@@ -29,9 +29,9 @@ C = F'*v;
 %  remove v from F
 F = null(v')'*F;
 
-%  define P,Q,R
+%  set O,Q,R
 H = eye(m) - ones(m)/m;
-P = ((S'*H*C)*C' - (C'*H*C)*S')*H;
+O = ((S'*H*C)*C' - (C'*H*C)*S')*H;
 Q = ((S'*H*C)*S' - (S'*H*S)*C')*H;
 R = H*((S'*H*S)*(C'*H*C)*eye(m) + (S'*H*C)*C*S' + (S'*H*C)*S*C' - (C'*H*C)*S*S' - (S'*H*C)^2*eye(m) - (S'*H*S)*C*C')*H;
 
@@ -39,8 +39,8 @@ w0 = randn(d-1,1);
 w0 = w0/norm(w0);
 w = struct('f',w0,'dw',ones(d-1,1));
 
-f = @(w) objective_MERLiN(w.f,F,P,Q,R);
-fprime = @(w) gradient_MERLiN(w,F,P,Q,R);
+f = @(w) objective_MERLiN(w.f,F,O,Q,R);
+fprime = @(w) gradient_MERLiN(w,F,O,Q,R);
 
 [w, converged, curob] = stiefasc(f,fprime,w);
 
