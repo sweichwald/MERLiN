@@ -1,6 +1,6 @@
 # MERLiN: Mixture Effect Recovery in Linear Networks
 
-MERLiN is a causal inference algorithm that can recover from an observed linear mixture a causal variable that is a causal effect of another given variable.
+MERLiN is a causal inference algorithm that can recover from an observed linear mixture a causal variable that is an effect of another given variable.
 MERLiN implements a novel idea on how to (re-)construct causal variables and is robust against hidden confounding.
 
 As a motivational example consider the following causal structure
@@ -35,11 +35,11 @@ The latter two algorithms may be applied to any type of timeseries data while th
 
 ## python3
 
-`python3 MERLiN_example` or `%run MERLiN_example.py` in ipython3 for a simple example of use.
+The file [MERLiN_example.py](python3/MERLiN_example.py) provides a simple example of use --- call `python3 MERLiN_example.py` or `%run MERLiN_example.py` in ipython3.
 
 ### get going
 
-The file `MERLiN_main` provides the main functionality --- in a nutshell:
+The file [MERLiN_main.py](python3/MERLiN_main.py) provides the main functionality --- in a nutshell:
 
 ```python
 from MERLiN_main import MERLiN, MERLiNbp, MERLiNbpicoh
@@ -74,10 +74,14 @@ w = res[0]
 
 Currently the python3 implementation is also compatible with python2. Tested with python2.7.6.
 
-`python2 MERLiN_example` or `%run MERLiN_example.py` in ipython2 for a simple example of use.
+The file [MERLiN_example.py](python3/MERLiN_example.py) provides a simple example of use --- call `python2 MERLiN_example.py` or `%run MERLiN_example.py` in ipython2.
 
 
 ## matlab
 
-Following soon.
-Send an email to *merlin-matlab* (at) *sweichwald* (dot) *de* and you'll get notified once the matlab implementation is available.
+The file [MERLiN_example.m](matlab/MERLiN_example.m) provides a simple example of use --- call `MERLiN_example` in matlab.
+
+* Requires [ADiGator](http://adigator.sourceforge.net/) (tested with V1.1.1). Download and add to matlab search path via `addpath(genpath('/path/to/adigator'))`.
+* Tested with matlab R2014a.
+* No validation of user input to functions.
+* MERLiNbp and MERLiNbpicoh not yet implemented --- following soon. Send an email to *merlin-matlab* (at) *sweichwald* (dot) *de* and you'll get notified once the matlab implementation is complete.
