@@ -97,37 +97,6 @@ def stiefel_update(V, G, lbd):
     return np.bmat([[V, Vp]]).dot( sp.linalg.expm(lbd*Z).dot( np.eye(n,p) ) )
 
 
-#set up MERLiN objective function and its gradient as theano function
-#(cf. Algorithm 2)
-def getMERLiNObjective():
-    s = T.matrix('s') #m x 1
-    c = T.matrix('c') #m x 1
-    F = T.matrix('F') #(d-1) x m
-    w = T.matrix('w') #(d-1) x 1
-    m = s.shape[0]
-
-    #linear combination
-    wF = F.T.dot(w) #m x 1
-
-    #centering matrix
-    I = T.eye(m,m)
-    H = I - T.mean(I)
-    #column-centered data
-    X = H.dot( T.concatenate([s,c,wF], axis=1) ) #m x 3
-
-    #covariance matrix
-    S = X.T.dot(X) / (m-1)
-    #precision matrix
-    prec = Tlina.matrix_inverse(S)
-
-    #objective and gradient
-    objective = T.abs_(prec[1,2])-T.abs_(prec[0,2])
-    gradient = T.grad(objective, w)
-
-    #return compiled function
-    return function([s,c,F,w], [objective, gradient])
-
-
 #set up MERLiNbp objective function and its gradient as theano function
 #(cf. Algorithm 4; optional plus=True for MERLiNbpicoh variant)
 def getMERLiNbpObjective(plus=False):
