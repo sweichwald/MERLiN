@@ -22,7 +22,7 @@ curob = f(w);
 for k=1:maxsteps
     % while there is no increase, i.e. step too large
     dw = fprime(w);
-    dw = dw.dw;
+    dw = adigator2vec(dw);
     wnew = w;
     wnew.f = stiefel_update(w.f, dw, lbd);
     curlbd = lbd;
@@ -52,4 +52,10 @@ function Vnew = stiefel_update(V, G, lbd)
     Vp = null(V');
     Z = [ V'*G-G'*V , -G'*Vp ; Vp'*G ,  zeros(n-p) ];
     Vnew = [V,Vp] * expm(lbd*Z) * eye(n,p);
+end
+
+
+function v = adigator2vec(dw)
+    v = zeros(dw.dw_size,1);
+    v(dw.dw_location) = dw.dw;
 end
