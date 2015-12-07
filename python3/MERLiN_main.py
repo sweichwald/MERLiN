@@ -151,7 +151,7 @@ def bpPreprocessing(Ftw,v,fs,omega1,omega2):
         #extract v signal
         V = v.T.dot(F)
 
-        #center, Hanning window, fft
+        #center, hanning window, fft
         V = (V - np.mean(V)) * hanning
         V = np.fft.rfft(V)[0,a:b]
         Vi[trial,:] = np.imag(V)
