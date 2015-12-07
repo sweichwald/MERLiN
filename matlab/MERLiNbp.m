@@ -34,7 +34,9 @@ options = adigatorOptions('OVERWRITE',1);
 w = adigatorCreateDerivInput([d 1],'w');
 evalc('adigator(''objective_MERLiNbp'',{w,n,Fi,Fr,O,Q,R},''gradient_MERLiNbp'',options);');
 
+%  random initial vector in orthogonal complement
 w0 = randn(d,1);
+w0 = null(v')*null(v')'*w0;
 w0 = w0/norm(w0);
 w = struct('f',w0,'dw',ones(d,1));
 

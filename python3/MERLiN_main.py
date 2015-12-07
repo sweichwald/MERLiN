@@ -204,8 +204,12 @@ def MERLiNbp(S,Ftw,v,fs,omega1,omega2,preprocessed = False):
     f = lambda w: func(S,Vi,Vr,Fi,Fr,w,n)[0]
     fprime = lambda w: func(S,Vi,Vr,Fi,Fr,w,n)[1]
 
+    #random initial vector in orthogonal complement
+    P = complementbasis(v)[:,1:].T
+    w0 = np.random.randn(v.shape[0],1)
+    w0 = normed( P.T.dot(P.dot(w0)) )
+
     #maximise f, fprime
-    w0 = normed(np.random.randn(v.shape[0],1))
     w, converged, curob = stiefasc(f,fprime,w0)
 
     return w, converged, curob
