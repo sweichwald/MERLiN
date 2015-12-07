@@ -12,8 +12,3 @@ function obj = objective_MERLiNbp(w,n,Fi,Fr,P,Q,R)
     Fw = H*log( unzero(sqrt( (Fi'*w).^2 + (Fr'*w).^2 )) )-log(n);
     obj = ( abs(Q*Fw) - abs(P*Fw) ) / abs( Fw'*R*Fw );
 end
-
-
-function x = unzero(x)
-    x(x == 0) = 1;
-end
