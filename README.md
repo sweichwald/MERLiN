@@ -87,7 +87,7 @@ The file [MERLiN_example.m](matlab/MERLiN_example.m) provides a simple example o
 
 ### get going
 
-The file [MERLiN.m](matlab/MERLiN.m) provides the MERLiN function --- in a nutshell:
+The file [MERLiN.m](matlab/MERLiN.m)/[MERLiNbp.m](matlab/MERLiNbp.m) provides the MERLiN/-bp function --- in a nutshell:
 
 ```matlab
 % the basic algorithm
@@ -95,6 +95,14 @@ The file [MERLiN.m](matlab/MERLiN.m) provides the MERLiN function --- in a nutsh
 % F: (d x m) matrix of linear mixture samples
 % v: (d x 1) vector corresponding to C1 in S->C1
 [w, converged, curob] = MERLiN(S,F,v)
+
+% the bp algorithm for iid sampled timeseries chunks
+% S: (m x 1) vector of samples of S
+% Ftw: (d x m x n) tensor containing timeseries of length n (d channels, m trials)
+% v: (d x 1) vector corresponding to C1 in S->C1
+% fs: sampling rate
+% omega1, omega2: low/high limit of desired frequency band
+[w, converged, curob] = MERLiNbp(S,Ftw,v,fs,omega1,omega2)
 
 % the solution vector
 w
@@ -105,4 +113,4 @@ w
 * Requires [ADiGator](http://adigator.sourceforge.net/) (tested with V1.1.1). Download and add to matlab search path via `addpath(genpath('/path/to/adigator'))`.
 * Tested with matlab R2014a.
 * No validation of user input to functions.
-* MERLiNbp and MERLiNbpicoh not yet implemented --- following soon. Send an email to *merlin-matlab* (at) *sweichwald* (dot) *de* and you'll get notified once the matlab implementation is complete.
+* MERLiNbpicoh not yet implemented --- following soon. Send an email to *merlin-matlab* (at) *sweichwald* (dot) *de* and you'll get notified once the matlab implementation is complete.
