@@ -14,15 +14,6 @@ checkADiGator();
 
 [d, m] = size(F);
 
-%  compile objective's gradient
-options = adigatorOptions('OVERWRITE',1);
-w = adigatorCreateDerivInput([d-1 1],'w');
-Fdat = adigatorCreateAuxInput([d-1 m]);
-O = adigatorCreateAuxInput([1 m]);
-Q = adigatorCreateAuxInput([1 m]);
-R = adigatorCreateAuxInput([m m]);
-evalc('adigator(''objective_MERLiN'',{w,Fdat,O,Q,R},''gradient_MERLiN'',options);');
-
 %  set C
 C = F'*v;
 
@@ -34,6 +25,11 @@ H = eye(m) - ones(m)/m;
 O = ((S'*H*C)*C' - (C'*H*C)*S')*H;
 Q = ((S'*H*C)*S' - (S'*H*S)*C')*H;
 R = H*((S'*H*S)*(C'*H*C)*eye(m) + (S'*H*C)*C*S' + (S'*H*C)*S*C' - (C'*H*C)*S*S' - (S'*H*C)^2*eye(m) - (S'*H*S)*C*C')*H;
+
+%  compile objective's gradient
+options = adigatorOptions('OVERWRITE',1);
+w = adigatorCreateDerivInput([d-1 1],'w');
+evalc('adigator(''objective_MERLiN'',{w,F,O,Q,R},''gradient_MERLiN'',options);');
 
 w0 = randn(d-1,1);
 w0 = w0/norm(w0);
