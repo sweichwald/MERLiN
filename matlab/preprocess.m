@@ -1,4 +1,4 @@
-function [Fi, Fr, C] = preprocess(Ftw,v,fs,omega1,omega2)
+function [Fi, Fr, C, Vi, Vr] = preprocess(Ftw,v,fs,omega1,omega2)
     [d,m,n] = size(Ftw);
 
     % frequency range
@@ -7,6 +7,8 @@ function [Fi, Fr, C] = preprocess(Ftw,v,fs,omega1,omega2)
     nprime = (b-a+1);
 
     Fnm = zeros(d,m*nprime);
+    Vall = zeros(m*nprime,1);
+
     C = zeros(m,1);
 
     % hanning window
@@ -22,6 +24,7 @@ function [Fi, Fr, C] = preprocess(Ftw,v,fs,omega1,omega2)
         V = (V-mean(V)) .* hanning;
         V = fft(V);
         V = V(a:b);
+        Vall( ((trial-1)*nprime+1):trial*nprime ) = V;
         C(trial) = mean(log(unzero(abs(V))))-log(n);
 
         % remove v signal
@@ -30,10 +33,12 @@ function [Fi, Fr, C] = preprocess(Ftw,v,fs,omega1,omega2)
 
         % hanning and fft
         F = F .* repmat(hanning,d,1);
-        F = fft(F')';
+        F = fft(F,[],2);
         Fnm(:, ((trial-1)*nprime+1):trial*nprime) = F(:,a:b);
     end
 
     Fi = imag(Fnm);
     Fr = real(Fnm);
+    Vi = imag(Vall);
+    Vr = real(Vall);
 end
