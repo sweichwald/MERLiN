@@ -1,5 +1,7 @@
 # MERLiN: Mixture Effect Recovery in Linear Networks
 
+*This is code accompanying the manuscript of the same title by Sebastian Weichwald, Moritz Grosse-Wentrup, Arthur Gretton; cf. http://arxiv.org/abs/1512.01255.*
+
 MERLiN is a causal inference algorithm that can recover from an observed linear mixture a causal variable that is an effect of another given variable.
 MERLiN implements a novel idea on how to (re-)construct causal variables and is robust against hidden confounding.
 
