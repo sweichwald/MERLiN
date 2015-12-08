@@ -29,14 +29,14 @@ R = F*H*((S'*H*S)*(C'*H*C)*eye(m) + (S'*H*C)*C*S' + (S'*H*C)*S*C' - (C'*H*C)*S*S
 %  compile objective's gradient
 options = adigatorOptions('OVERWRITE',1);
 w = adigatorCreateDerivInput([d-1 1],'w');
-evalc('adigator(''objective_MERLiN'',{w,F,O,Q,R},''gradient_MERLiN'',options);');
+evalc('adigator(''objective_MERLiN'',{w,O,Q,R},''gradient_MERLiN'',options);');
 
 w0 = randn(d-1,1);
 w0 = w0/norm(w0);
 w = struct('f',w0,'dw',ones(d-1,1));
 
-f = @(w) objective_MERLiN(w.f,F,O,Q,R);
-fprime = @(w) gradient_MERLiN(w,F,O,Q,R);
+f = @(w) objective_MERLiN(w.f,O,Q,R);
+fprime = @(w) gradient_MERLiN(w,O,Q,R);
 
 [w, converged, curob] = stiefasc(f,fprime,w);
 
