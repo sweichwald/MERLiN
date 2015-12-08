@@ -1,4 +1,4 @@
 %  MERLiN objective function
-function obj = objective_MERLiN(w,F,P,Q,R)
-    obj = ( abs(Q*F'*w) - abs(P*F'*w) ) / abs( w'*F*R*F'*w );
+function obj = objective_MERLiN(w,F,O,Q,R)
+    obj = ( abs(Q*w) - abs(O*w) ) / abs( w'*R*w );
 end

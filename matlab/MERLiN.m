@@ -22,9 +22,9 @@ F = null(v')'*F;
 
 %  set O,Q,R
 H = eye(m) - ones(m)/m;
-O = ((S'*H*C)*C' - (C'*H*C)*S')*H;
-Q = ((S'*H*C)*S' - (S'*H*S)*C')*H;
-R = H*((S'*H*S)*(C'*H*C)*eye(m) + (S'*H*C)*C*S' + (S'*H*C)*S*C' - (C'*H*C)*S*S' - (S'*H*C)^2*eye(m) - (S'*H*S)*C*C')*H;
+O = ((S'*H*C)*C' - (C'*H*C)*S')*H*F';
+Q = ((S'*H*C)*S' - (S'*H*S)*C')*H*F';
+R = F*H*((S'*H*S)*(C'*H*C)*eye(m) + (S'*H*C)*C*S' + (S'*H*C)*S*C' - (C'*H*C)*S*S' - (S'*H*C)^2*eye(m) - (S'*H*S)*C*C')*H*F';
 
 %  compile objective's gradient
 options = adigatorOptions('OVERWRITE',1);
