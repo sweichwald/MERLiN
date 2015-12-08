@@ -23,7 +23,7 @@ the algorithm searches for a vector w such that w'F is an effect of C1, e.g. rec
 One practical example is the application to electroencephalographic (EEG) data recorded during a neurofeedback experiment.
 Here, F1,...,Fd denote the electroencephalographic (EEG) channel recordings that are a linear mixture F=AC of the underlying cortical sources C1,...,Cd.
 S denotes the randomised instruction to up-/downregulate the neurofeedback signal C1=v'F.
-In this setup, MERLiNbp and MERLiNbpicoh are able to recover from F a causal effect C2=w'F of C1, i.e. establish a cause-effect relationship between two cortical signals C1 and C2.
+In this setup, MERLiNbp and MERLiNbpicoh are able to recover from F a causal effect C2=w'F of C1, i.e. establish a cause-effect relationship between two cortical sources C1 and C2.
 
 This repository provides python and matlab implementations of the following algorithms:
 
