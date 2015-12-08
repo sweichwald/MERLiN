@@ -22,16 +22,17 @@ the algorithm searches for a vector w such that w'F is an effect of C1, e.g. rec
 
 One practical example is the application to electroencephalographic (EEG) data recorded during a neurofeedback experiment.
 Here, F1,...,Fd denote the electroencephalographic (EEG) channel recordings that are a linear mixture F=AC of the underlying cortical sources C1,...,Cd.
-S denotes the randomised instruction to up-/downregulate the neurofeedback signal v'F.
-In this setup, MERLiNbp and MERLiNbpicoh are able to recover a causal effect w'F of C1=v'F, i.e. establish a cause-effect relationship between two cortical signals v'F and w'F.
+S denotes the randomised instruction to up-/downregulate the neurofeedback signal C1=v'F.
+In this setup, MERLiNbp and MERLiNbpicoh are able to recover from F a causal effect C2=w'F of C1, i.e. establish a cause-effect relationship between two cortical signals C1 and C2.
 
-This repository will contain implementations of the following algorithms:
+This repository provides python and matlab implementations of the following algorithms:
 
 * **MERLiN**: precision matrix based algorithm that works on iid samples
 * **MERLiNbp**: precision matrix based algorithm that works on iid sampled timeseries chunks and searches for a certain cause-effect relationship between the resulting log-bandpower features
 * **MERLiNbpicoh**: extends MERLiNbp by an imaginary coherency regularisation
 
-The latter two algorithms may be applied to any type of timeseries data while they are tailored to analysis of EEG data.
+The latter two algorithms may be applied to any type of timeseries data.
+In [this manuscript](http://arxiv.org/abs/1512.01255), for example, they have been employed in the analysis of EEG data.
 
 
 ---
