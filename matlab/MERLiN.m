@@ -9,9 +9,6 @@
 %      curob: value of f at w
 function [w, converged, curob] = MERLiN(S,F,v)
 
-%  check adigator availability
-checkADiGator();
-
 [d, m] = size(F);
 
 %  set C
@@ -26,20 +23,15 @@ O = ((S'*H*C)*C' - (C'*H*C)*S')*H*F';
 Q = ((S'*H*C)*S' - (S'*H*S)*C')*H*F';
 R = F*H*((S'*H*S)*(C'*H*C)*eye(m) + (S'*H*C)*C*S' + (S'*H*C)*S*C' - (C'*H*C)*S*S' - (S'*H*C)^2*eye(m) - (S'*H*S)*C*C')*H*F';
 
-%  compile objective's gradient
-options = adigatorOptions('OVERWRITE',1);
-w = adigatorCreateDerivInput([d-1 1],'w');
-evalc('adigator(''objective_MERLiN'',{w,O,Q,R},''gradient_MERLiN'',options);');
+%  objective and gradient as inline functions
+f = @(w) ( abs(Q*w) - abs(O*w) ) / abs( w'*R*w );
+fprime = @(w) ( abs(w'*R*w)*( sign(Q*w)*Q'-sign(O*w)*O' ) - sign(w'*R*w)*( abs(Q*w) - abs(O*w) )*(R+R')*w ) / (abs(w'*R*w)^2);
 
 w0 = randn(d-1,1);
 w0 = w0/norm(w0);
-w = struct('f',w0,'dw',ones(d-1,1));
 
-f = @(w) objective_MERLiN(w.f,O,Q,R);
-fprime = @(w) gradient_MERLiN(w,O,Q,R);
+[w, converged, curob] = stiefasc(f,fprime,w0);
 
-[w, converged, curob] = stiefasc(f,fprime,w);
-
-w = null(v')*w.f;
+w = null(v')*w;
 
 end
