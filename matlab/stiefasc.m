@@ -1,7 +1,8 @@
 %  Stiefel gradient ascent (cf. Algorithm 1)
 %  Input
-%      f, fprime: objective function and its gradient as theano functions
-%      w: initial point
+%      f, fprime: objective function and its gradient as anonymous functions
+%                 (either both taking adigator structs or vectors as input)
+%      w: initial point (either an adigator struct or a vector)
 %  Optional input (not yet implemented)
 %      tol: tolerance for stopping criterion
 %      maxsteps: maximum number of Stiefel gradient ascent steps
@@ -16,19 +17,29 @@ tol=1e-16;
 maxsteps=500;
 lbd=1;
 
+adigatormode = isstruct(w);
+
 converged = 0;
 curob = f(w);
 
 for k=1:maxsteps
     % while there is no increase, i.e. step too large
     dw = fprime(w);
-    dw = adigator2vec(dw);
-    wnew = w;
-    wnew.f = stiefel_update(w.f, dw, lbd);
+    if adigatormode
+        dw = adigator2vec(dw);
+        wnew = w;
+        wnew.f = stiefel_update(w.f, dw, lbd);
+    else
+        wnew = stiefel_update(w, dw, lbd);
+    end
     curlbd = lbd;
     while f(wnew) < curob
         curlbd = curlbd*.5;
-        wnew.f = stiefel_update(w.f, dw, curlbd);
+        if adigatormode
+            wnew.f = stiefel_update(w.f, dw, curlbd);
+        else
+            wnew = stiefel_update(w, dw, curlbd);
+        end
     end
     w = wnew;
 
