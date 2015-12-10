@@ -82,34 +82,28 @@ def MERLiN(S,F,v):
     C = F.T.dot(v)
     #replace F, i.e. remove v signal
     P = complementbasis(v)[:,1:].T
-    Fdat = P.dot(F)
-
-    #set function and derivative
-    w = T.matrix('w') #(d-1) x 1
-    O = T.matrix('O') #1 x m
-    Q = T.matrix('Q') #1 x m
-    R = T.matrix('R') #m x m
-    objective = ( ( T.abs_(Q.dot(w)) - T.abs_(O.dot(w)) ) / T.abs_(w.T.dot(R.dot(w))) )[0,0]
-    gradient = T.grad(objective, w)
-    func = function([w,O,Q,R], [objective, gradient])
-    f = lambda w: func(w,Odat,Qdat,Rdat)[0]
-    fprime = lambda w: func(w,Odat,Qdat,Rdat)[1]
+    F = P.dot(F)
 
     #set O,Q,R
     m = S.shape[0]
     H = np.eye(m) - np.ones((m,m))/m
-    Odat = (( S.T.dot(H.dot(C.dot(C.T))) - C.T.dot(H.dot(C.dot(S.T))) ).dot(H)).dot(Fdat.T)
-    Qdat = (( S.T.dot(H.dot(C.dot(S.T))) - S.T.dot(H.dot(S.dot(C.T))) ).dot(H)).dot(Fdat.T)
+    O = (( S.T.dot(H.dot(C.dot(C.T))) - C.T.dot(H.dot(C.dot(S.T))) ).dot(H)).dot(F.T)
+    Q = (( S.T.dot(H.dot(C.dot(S.T))) - S.T.dot(H.dot(S.dot(C.T))) ).dot(H)).dot(F.T)
     r1 = (S.T.dot(H.dot(S.dot(C.T.dot(H.dot(C))))))*np.eye(m)
     r2 = S.T.dot(H.dot(C))*C.dot(S.T)
     r3 = S.T.dot(H.dot(C))*S.dot(C.T)
     r4 = C.T.dot(H.dot(C))*S.dot(S.T)
     r5 = (S.T.dot(H.dot(C))**2)*np.eye(m)
     r6 = S.T.dot(H.dot(S))*C.dot(C.T)
-    Rdat = Fdat.dot(((H.dot( r1 + r2 + r3 - r4 - r5 - r6 )).dot(H)).dot(Fdat.T))
+    R = F.dot(((H.dot( r1 + r2 + r3 - r4 - r5 - r6 )).dot(H)).dot(F.T))
+
+    #set function and derivative
+    f = lambda w: ( np.abs(Q.dot(w)) - np.abs(O.dot(w)) ) / np.abs( w.T.dot(R.dot(w)) )
+    fprime = lambda w: np.asarray( ( np.abs(w.T.dot(R.dot(w)))*( np.sign(Q.dot(w))*Q.T-np.sign(O.dot(w))*O.T ) - np.sign(w.T.dot(R.dot(w)))*( np.abs(Q.dot(w)) - np.abs(O.dot(w)) )*(R+R.T).dot(w) ) / (np.abs(w.T.dot(R.dot(w)))**2) )
 
     #maximise f, fprime
     w0 = normed(np.random.randn(v.shape[0]-1,1))
+
     w, converged, curob = stiefasc(f,fprime,w0)
 
     return P.T.dot(w), converged, curob
