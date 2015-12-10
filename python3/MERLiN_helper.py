@@ -94,7 +94,7 @@ def stiefel_update(V, G, lbd):
     p = V.shape[1]
     Vp = null(V)
     Z = np.bmat([ [ V.T.dot(G)-G.T.dot(V) , -G.T.dot(Vp) ] , [ Vp.T.dot(G) ,  np.zeros((n-p,n-p)) ] ])
-    return np.bmat([[V, Vp]]).dot( sp.linalg.expm(lbd*Z).dot( np.eye(n,p) ) )
+    return np.asarray(np.bmat([[V, Vp]]).dot( sp.linalg.expm(lbd*Z).dot( np.eye(n,p) ) ))
 
 
 #set up MERLiNbp objective function and its gradient as theano function
