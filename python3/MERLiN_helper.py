@@ -54,7 +54,7 @@ def angle(u, v):
 
 
 #generate timeseries tensor Ftw from given data matrix F (cf. Section III.A.)
-def genToyTimeseriesTensor(F,v,fs,n,omega1,omega2):
+def genToyTimeseriesTensor(F,fs,n,omega1,omega2):
     #random (time)series
     d,m = F.shape
     Ftw = np.random.randn(d,m,n)
@@ -80,7 +80,7 @@ def genToyTimeseriesTensor(F,v,fs,n,omega1,omega2):
 
             #bump each coefficient by factor lbd
             for f in range(0,len(fft)):
-                fft[f] = np.abs(fft[f])*lbd*fft[f]/np.abs(fft[f])
+                fft[f] = lbd*fft[f]
 
             hanning[hanning == 0] = 1
             Ftw[channel,trial,:] = np.fft.irfft(fft) / hanning + prevmean

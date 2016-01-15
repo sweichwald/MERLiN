@@ -35,7 +35,7 @@ fs = 100
 n = 100
 omega1 = 8
 omega2 = 12
-Ftw = genToyTimeseriesTensor(F,v,fs,n,omega1,omega2)
+Ftw = genToyTimeseriesTensor(F,fs,n,omega1,omega2)
 
 
 #run MERLiNbp
