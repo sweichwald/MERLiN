@@ -1,10 +1,6 @@
 import numpy as np
-import scipy as sp
 import theano.tensor as T
 import theano.sandbox.linalg as Tlina
-from theano import function
-from scipy.special import betainc
-from scipy import io
 
 
 #normalise vector x
@@ -53,6 +49,32 @@ def angle(u, v):
     return np.asscalar(np.arccos(np.clip(np.dot(normed(u).T, normed(v)), -1 , 1)))
 
 
+#linesearch to hand over to pymanopt
+class linesearch(object):
+    def __init__(self, minstepsize=1e-16):
+        self._contraction_factor = .7
+        self._initial_stepsize = 1
+        self._minstepsize = minstepsize
+
+    def search(self, objective, man, x, d, f0, df0):
+        norm_d = man.norm(x, d)
+        alpha = self._initial_stepsize / norm_d
+
+        newx = man.retr(x, alpha * d)
+        newf = objective(newx)
+
+        #while there is no decrease, i.e. step too large
+        while newf > f0 and alpha * norm_d > self._minstepsize:
+            alpha *= self._contraction_factor
+            newx = man.retr(x, alpha * d)
+            newf = objective(newx)
+        if newf > f0:
+            alpha = 0
+            newx = x
+        stepsize = alpha * norm_d
+        return stepsize, newx
+
+
 #generate timeseries tensor Ftw from given data matrix F (cf. Section III.A.)
 def genToyTimeseriesTensor(F,fs,n,omega1,omega2):
     #random (time)series
@@ -88,25 +110,15 @@ def genToyTimeseriesTensor(F,fs,n,omega1,omega2):
     return Ftw
 
 
-#from V take Stiefel ascent step defined by the gradient G and step size lbd
-def stiefel_update(V, G, lbd):
-    n = V.shape[0]
-    p = V.shape[1]
-    Vp = null(V)
-    Z = np.bmat([ [ V.T.dot(G)-G.T.dot(V) , -G.T.dot(Vp) ] , [ Vp.T.dot(G) ,  np.zeros((n-p,n-p)) ] ])
-    return np.asarray(np.bmat([[V, Vp]]).dot( sp.linalg.expm(lbd*Z).dot( np.eye(n,p) ) ))
-
-
-#set up MERLiNbp objective function and its gradient as theano function
+#set up MERLiNbp objective function and its gradient as theano graph
 #(cf. Algorithm 4; optional plus=True for MERLiNbpicoh variant)
-def getMERLiNbpObjective(plus=False):
-    s = T.matrix('s') #m x 1
-    vFr = T.matrix('vFr') #m x n'
-    vFi = T.matrix('vFi') #m x n'
-    Fr = T.matrix('Fr') #d x (m*n')
-    Fi = T.matrix('Fi') #d x (m*n')
+#s    m x 1
+#vFr  m x n'
+#vFi  m x n'
+#Fr   d x (m*n')
+#Fi   d x (m*n')
+def getMERLiNbpObjective(s,vFi,vFr,Fi,Fr,n,plus=False):
     w = T.matrix('w') #d x 1
-    n = T.scalar('n')
     m = s.shape[0]
 
     #linear combination
@@ -147,13 +159,12 @@ def getMERLiNbpObjective(plus=False):
     #objective and gradient for MERLiNb
     else:
         objective = T.abs_(prec[1,2])-T.abs_(prec[0,2])
-    gradient = T.grad(objective, w)
 
     #return compiled function
-    return function([s,vFi,vFr,Fi,Fr,w,n], [objective, gradient])
+    return objective, w
 
 
-#set up MERLiNbpicoh objective function and its gradient as theano function
+#set up MERLiNbpicoh objective function and its gradient as theano graph
 #(cf. Algorithm 5)
-def getMERLiNbpicohObjective():
-    return getMERLiNbpObjective(plus=True)
+def getMERLiNbpicohObjective(s,vFi,vFr,Fi,Fr,n):
+    return getMERLiNbpObjective(s,vFi,vFr,Fi,Fr,n,plus=True)

@@ -1,7 +1,12 @@
-from MERLiN_helper import *
+from MERLiN_helper import gsortho, complementbasis, normed, angle, linesearch, getMERLiNbpicohObjective, getMERLiNbpObjective
 import numpy as np
+from scipy.special import betainc
 import theano.tensor as T
 from theano import function
+
+from pymanopt import Problem
+from pymanopt.manifolds import Sphere
+from pymanopt.solvers import SteepestDescent
 
 
 #performance measures (cf. Section III.B.)
@@ -32,37 +37,37 @@ def andi(wG0, w):
 
 
 '''
-Stiefel gradient ascent (cf. Algorithm 1)
+maximise using pymanopt
 Input
-    f, fprime: objective function and its gradient as theano functions
-    w: initial point
+    f, fprime: objective function and its gradient either both as
+               regular functions or both as theano functions
+    arg: None or theano variable that is the argument of f
+    w0: initial vector
 Optional input
-    tol: tolerance for stopping criterion
-    maxsteps: maximum number of Stiefel gradient ascent steps
-    lbd: initial step size
+    maxiter: maximum number of conjugate gradient steps
+    tol: terminate if stepsize < tol
 Output
-    w: found solution after maxsteps steps or when the stopping criterion was met
+    w: found solution after maxiter steps or meeting the stopping criterion
     converged: whether the stopping criterion was met
     curob: value of f at w
 '''
-def stiefasc(f,fprime,w,tol=1e-16,maxsteps=500,lbd=1):
-    converged = 0
-    curob = f(w)
-    for k in range(0,maxsteps):
-        #while there is no increase, i.e. step too large
-        curlbd = lbd
-        while f(stiefel_update(w, fprime(w), curlbd)) < curob:
-            curlbd = curlbd*.5
-        w = stiefel_update(w, fprime(w), curlbd)
+def maximise(f,fprime,arg,w0,tol=1e-16,maxiter=500):
+    manifold = Sphere(w0.shape[0])
 
-        newob = f(w)
+    #MERLiNbp and MERLiNbpicoh
+    if fprime is None:
+        problem = Problem(man=manifold, cost=-f, arg=arg, verbosity=0)
+    #MERLiN
+    else:
+        cost = lambda x: -f(x)
+        egrad = lambda x: -fprime(x)
+        problem = Problem(man=manifold, cost=cost, egrad=egrad, verbosity=0)
 
-        #'converged'?
-        if np.abs(curob-newob) < tol:
-            converged = 1
-            break
-
-        curob = newob
+    solver = SteepestDescent(maxtime=float('inf'),maxiter=maxiter,mingradnorm=0,minstepsize=tol,
+                             linesearch=linesearch(minstepsize=tol),logverbosity=1)
+    w, info = solver.solve(problem, x=w0)
+    converged = maxiter != info['final_values']['iterations']
+    curob = -float(info['final_values']['f(x)'])
     return w, converged, curob
 
 
@@ -74,7 +79,7 @@ Input
     v: (d x 1) vector corresponding to C1 in S->C1
 Output
     w: found (d x 1) vector
-    converged: whether the stopping criterion of Stiefel gradient ascent was met
+    converged: whether the stopping criterion was met
     curob: value of f at w
 '''
 def MERLiN(S,F,v):
@@ -97,14 +102,13 @@ def MERLiN(S,F,v):
     r6 = S.T.dot(H.dot(S))*C.dot(C.T)
     R = F.dot(((H.dot( r1 + r2 + r3 - r4 - r5 - r6 )).dot(H)).dot(F.T))
 
-    #set function and derivative
+    #set objective function and derivative
     f = lambda w: ( np.abs(Q.dot(w)) - np.abs(O.dot(w)) ) / np.abs( w.T.dot(R.dot(w)) )
     fprime = lambda w: np.asarray( ( np.abs(w.T.dot(R.dot(w)))*( np.sign(Q.dot(w))*Q.T-np.sign(O.dot(w))*O.T ) - np.sign(w.T.dot(R.dot(w)))*( np.abs(Q.dot(w)) - np.abs(O.dot(w)) )*(R+R.T).dot(w) ) / (np.abs(w.T.dot(R.dot(w)))**2) )
 
-    #maximise f, fprime
+    #maximise
     w0 = normed(np.random.randn(v.shape[0]-1,1))
-
-    w, converged, curob = stiefasc(f,fprime,w0)
+    w, converged, curob = maximise(f,fprime,None,w0)
 
     return P.T.dot(w), converged, curob
 
@@ -174,9 +178,9 @@ Input
     fs: sampling rate
     omega1, omega2: low/high limit of desired frequency band
 Optional input
-    preprocessed: dict of already preprocessed data Vi, Vr, Fi, Fr, n
+    preprocessed: list of already preprocessed data Vi, Vr, Fi, Fr, n
 Output
-    w: found solution after maxsteps steps or when the stopping criterion was met
+    w: found (d x 1) vector
     converged: whether the stopping criterion was met
     curob: value of f at w
 '''
@@ -192,18 +196,16 @@ def MERLiNbp(S,Ftw,v,fs,omega1,omega2,preprocessed = False):
     Fi = Fi.reshape(d,-1)
     Fr = Fr.reshape(d,-1)
 
-    #set function and derivative
-    func = getMERLiNbpObjective()
-    f = lambda w: func(S,Vi,Vr,Fi,Fr,w,n)[0]
-    fprime = lambda w: func(S,Vi,Vr,Fi,Fr,w,n)[1]
+    #get objective function and its argument as theano variables
+    f, w = getMERLiNbpObjective(S,Vi,Vr,Fi,Fr,n)
 
     #random initial vector in orthogonal complement
     P = complementbasis(v)[:,1:].T
     w0 = np.random.randn(v.shape[0],1)
     w0 = normed( P.T.dot(P.dot(w0)) )
 
-    #maximise f, fprime
-    w, converged, curob = stiefasc(f,fprime,w0)
+    #maximise f
+    w, converged, curob = maximise(f,None,w,w0)
 
     return w, converged, curob
 
@@ -217,9 +219,9 @@ Input
     fs: sampling rate
     omega1, omega2: low/high limit of desired frequency band
 Optional input
-    preprocessed: dict of already preprocessed data Vi, Vr, Fi, Fr, n
+    preprocessed: list of already preprocessed data Vi, Vr, Fi, Fr, n
 Output
-    w: found solution after maxsteps steps or when the stopping criterion was met
+    w: found (d x 1) vector
     converged: whether the stopping criterion was met
     curob: value of f at w
 '''
@@ -235,14 +237,16 @@ def MERLiNbpicoh(S,Ftw,v,fs,omega1,omega2,preprocessed = False):
     Fi = Fi.reshape(d,-1)
     Fr = Fr.reshape(d,-1)
 
-    #set function and derivative
-    func = getMERLiNbpicohObjective()
-    f = lambda w: func(S,Vi,Vr,Fi,Fr,w,n)[0]
-    fprime = lambda w: func(S,Vi,Vr,Fi,Fr,w,n)[1]
+    #get objective function and its argument as theano variables
+    f, w = getMERLiNbpicohObjective(S,Vi,Vr,Fi,Fr,n)
 
-    #maximise f, fprime
-    w0 = normed(np.random.randn(v.shape[0],1))
-    w, converged, curob = stiefasc(f,fprime,w0)
+    #random initial vector in orthogonal complement
+    P = complementbasis(v)[:,1:].T
+    w0 = np.random.randn(v.shape[0],1)
+    w0 = normed( P.T.dot(P.dot(w0)) )
+
+    #maximise f
+    w, converged, curob = maximise(f,None,w,w0)
 
     return w, converged, curob
 
