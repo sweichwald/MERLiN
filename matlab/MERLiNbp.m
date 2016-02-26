@@ -37,10 +37,13 @@ O = ((S'*H*C)*C' - (C'*H*C)*S')*H;
 Q = ((S'*H*C)*S' - (S'*H*S)*C')*H;
 R = H*((S'*H*S)*(C'*H*C)*eye(m) + (S'*H*C)*C*S' + (S'*H*C)*S*C' - (C'*H*C)*S*S' - (S'*H*C)^2*eye(m) - (S'*H*S)*C*C')*H;
 
+% basename for temporary files
+fname = ['tmp_adigator_' num2str(tic)];
+
 %  compile objective's gradient
 options = adigatorOptions('OVERWRITE',1);
 w = adigatorCreateDerivInput([d 1],'w');
-evalc('adigator(''objective_MERLiNbp'',{w,n,Fi,Fr,O,Q,R},''gradient_MERLiNbp'',options);');
+evalc(['adigator(''objective_MERLiNbp'',{w,n,Fi,Fr,O,Q,R},''' fname ''',options);']);
 
 %  random initial vector in orthogonal complement
 w0 = randn(d,1);
@@ -51,8 +54,12 @@ w0 = w0/norm(w0);
 w = struct('f',w0,'dw',ones(d,1));
 
 f = @(w) objective_MERLiNbp(w.f,n,Fi,Fr,O,Q,R);
-fprime = @(w) gradient_MERLiNbp(w,n,Fi,Fr,O,Q,R);
+evalc(['fprime = @(w) ' fname '(w,n,Fi,Fr,O,Q,R);']);
 
 [w, converged, curob] = maximise(f,fprime,w);
+
+% remove temporary files
+delete([fname '.m']);
+delete([fname '.mat']);
 
 end
