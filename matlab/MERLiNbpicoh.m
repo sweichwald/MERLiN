@@ -43,8 +43,6 @@ w = struct('f',w0,'dw',ones(d,1));
 f = @(w) objective_MERLiNbpicoh(w.f,n,Fi,Fr,Vi,Vr,O,Q,R);
 fprime = @(w) gradient_MERLiNbpicoh(w,n,Fi,Fr,Vi,Vr,O,Q,R);
 
-[w, converged, curob] = stiefasc(f,fprime,w);
-
-w = w.f;
+[w, converged, curob] = maximise(f,fprime,w);
 
 end

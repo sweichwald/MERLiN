@@ -77,5 +77,4 @@ target/
 slprj/
 
 # do not include adigator in repo
-matlab/adigator/
 matlab/gradient_*

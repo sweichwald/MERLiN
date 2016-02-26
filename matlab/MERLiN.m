@@ -30,7 +30,7 @@ fprime = @(w) ( abs(w'*R*w)*( sign(Q*w)*Q'-sign(O*w)*O' ) - sign(w'*R*w)*( abs(Q
 w0 = randn(d-1,1);
 w0 = w0/norm(w0);
 
-[w, converged, curob] = stiefasc(f,fprime,w0);
+[w, converged, curob] = maximise(f,fprime,w0);
 
 w = null(v')*w;
 
