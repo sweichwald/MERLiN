@@ -1,4 +1,4 @@
-from MERLiN_helper import complementbasis, linesearch
+from MERLiN_helper import complementbasis
 import numpy as np
 import theano.tensor as T
 import theano.compile.sharedvalue as TS
@@ -31,7 +31,7 @@ class MERLiN:
         self._verbosity = verbosity
 
     def run(self, S, F, v=None, C=None, fs=None, omega=None,
-            maxiter=500, tol=1e-16, variant='bp'):
+            maxiter=500, tol=1e-10, variant='bp'):
         '''
         Run MERLiN algorithm.
         Whether to run a scalar variant, i.e. S -> C -> w'F, or a
@@ -58,7 +58,7 @@ class MERLiN:
             - maxiter (500)
                 maximum iterations to run the optimisation algorithm for
             - tol (1e-16)
-                terminate optimisation if step size < tol
+                terminate optimisation if step size < tol or grad norm < tol
             - variant ('bp')
                 determines which MERLiN variant to use on timeseries data
                 ('bp' = MERLiNbp algorithm ([1], Algorithm 4),
@@ -113,13 +113,18 @@ class MERLiN:
 
         problem.manifold = Sphere(self._d)
 
+        # choose best out of ten 10-step runs as initialisation
+        solver = SteepestDescent(maxiter=10, logverbosity=1)
+        res = [solver.solve(problem) for k in range(0, 10)]
+        obs = [-r[1]['final_values']['f(x)'] for r in res]
+        w0 = res[obs.index(max(obs))][0]
+
         solver = SteepestDescent(maxtime=float('inf'), maxiter=maxiter,
-                                 mingradnorm=0, minstepsize=tol,
-                                 linesearch=linesearch(tol),
+                                 mingradnorm=tol, minstepsize=tol,
                                  logverbosity=1)
         if self._verbosity:
             print('Running optimisation algorithm.')
-        w, info = solver.solve(problem)
+        w, info = solver.solve(problem, x=w0)
         converged = maxiter != info['final_values']['iterations']
         curob = -float(info['final_values']['f(x)'])
         if self._verbosity:
