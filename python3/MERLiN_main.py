@@ -56,12 +56,12 @@ def maximise(f,fprime,arg,w0,tol=1e-16,maxiter=500):
 
     #MERLiNbp and MERLiNbpicoh
     if fprime is None:
-        problem = Problem(man=manifold, cost=-f, arg=arg, verbosity=0)
+        problem = Problem(manifold=manifold, cost=-f, arg=arg, verbosity=0)
     #MERLiN
     else:
         cost = lambda x: -f(x)
         egrad = lambda x: -fprime(x)
-        problem = Problem(man=manifold, cost=cost, egrad=egrad, verbosity=0)
+        problem = Problem(manifold=manifold, cost=cost, egrad=egrad, verbosity=0)
 
     solver = SteepestDescent(maxtime=float('inf'),maxiter=maxiter,mingradnorm=0,minstepsize=tol,
                              linesearch=linesearch(minstepsize=tol),logverbosity=1)
