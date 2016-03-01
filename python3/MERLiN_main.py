@@ -135,8 +135,8 @@ def bpPreprocessing(Ftw,v,fs,omega1,omega2):
 
     Vi = np.zeros([m,b-a])
     Vr = np.zeros([m,b-a])
-    Fi = np.zeros([d,m,b-a])
-    Fr = np.zeros([d,m,b-a])
+    Fi = np.zeros([d-1,m,b-a])
+    Fr = np.zeros([d-1,m,b-a])
 
     #hanning window
     hanning = 0.5*(1-np.cos( (2*np.pi*np.arange(0,n)) / (n-1) ))
@@ -156,10 +156,10 @@ def bpPreprocessing(Ftw,v,fs,omega1,omega2):
 
         #remove v signal
         P = complementbasis(v)[:,1:].T
-        F = P.T.dot(P.dot(F))
+        F = P.dot(F)
 
         #loop through channels
-        for channel in range(0,d):
+        for channel in range(0,d-1):
             x = F[channel,:]
             x = (x - np.mean(x)) * hanning
             x = np.fft.rfft(x)[a:b]
@@ -199,15 +199,11 @@ def MERLiNbp(S,Ftw,v,fs,omega1,omega2,preprocessed = False):
     #get objective function and its argument as theano variables
     f, w = getMERLiNbpObjective(S,Vi,Vr,Fi,Fr,n)
 
-    #random initial vector in orthogonal complement
-    P = complementbasis(v)[:,1:].T
-    w0 = np.random.randn(v.shape[0],1)
-    w0 = normed( P.T.dot(P.dot(w0)) )
-
     #maximise f
+    w0 = normed(np.random.randn(d,1))
     w, converged, curob = maximise(f,None,w,w0)
 
-    return w, converged, curob
+    return complementbasis(v)[:,1:].dot(w), converged, curob
 
 
 '''
@@ -240,15 +236,11 @@ def MERLiNbpicoh(S,Ftw,v,fs,omega1,omega2,preprocessed = False):
     #get objective function and its argument as theano variables
     f, w = getMERLiNbpicohObjective(S,Vi,Vr,Fi,Fr,n)
 
-    #random initial vector in orthogonal complement
-    P = complementbasis(v)[:,1:].T
-    w0 = np.random.randn(v.shape[0],1)
-    w0 = normed( P.T.dot(P.dot(w0)) )
-
     #maximise f
+    w0 = normed(np.random.randn(d,1))
     w, converged, curob = maximise(f,None,w,w0)
 
-    return w, converged, curob
+    return complementbasis(v)[:,1:].dot(w), converged, curob
 
 
 '''
