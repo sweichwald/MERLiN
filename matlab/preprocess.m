@@ -6,7 +6,7 @@ function [Fi, Fr, C, Vi, Vr] = preprocess(Ftw,v,fs,omega1,omega2)
     b = max(find( (1:ceil(n/2))*fs/n <= omega2 ));
     nprime = (b-a+1);
 
-    Fnm = zeros(d,m*nprime);
+    Fnm = zeros(d-1,m*nprime);
     Vall = zeros(m*nprime,1);
 
     C = zeros(m,1);
@@ -28,11 +28,10 @@ function [Fi, Fr, C, Vi, Vr] = preprocess(Ftw,v,fs,omega1,omega2)
         C(trial) = mean(log(unzero(abs(V))))-log(n);
 
         % remove v signal
-        P = null(v')';
-        F = P'*P*F;
+        F = null(v')'*F;
 
         % hanning and fft
-        F = F .* repmat(hanning,d,1);
+        F = F .* repmat(hanning,d-1,1);
         F = fft(F,[],2);
         Fnm(:, ((trial-1)*nprime+1):trial*nprime) = F(:,a:b);
     end

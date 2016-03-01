@@ -7,8 +7,6 @@
 %      omega1, omega2: low/high limit of desired frequency band
 %  Optional input
 %      'C', C: precomputed samples of middle node, v will be ignored
-%  Optional input (not yet implemented)
-%      preprocessed: dict of already preprocessed data Vi, Vr, Fi, Fr, n
 %  Output
 %      w: found solution after maxsteps steps or when the stopping criterion was met
 %      converged: whether the stopping criterion was met
@@ -42,21 +40,19 @@ fname = ['tmp_adigator_' num2str(tic)];
 
 %  compile objective's gradient
 options = adigatorOptions('OVERWRITE',1);
-w = adigatorCreateDerivInput([d 1],'w');
+w = adigatorCreateDerivInput([d-1 1],'w');
 evalc(['adigator(''objective_MERLiNbp'',{w,n,Fi,Fr,O,Q,R},''' fname ''',options);']);
 
-%  random initial vector in orthogonal complement
-w0 = randn(d,1);
-if isempty(find(strcmp(varargin,'C')))
-    w0 = null(v')*null(v')'*w0;
-end
+w0 = randn(d-1,1);
 w0 = w0/norm(w0);
-w = struct('f',w0,'dw',ones(d,1));
+w = struct('f',w0,'dw',ones(d-1,1));
 
 f = @(w) objective_MERLiNbp(w.f,n,Fi,Fr,O,Q,R);
 evalc(['fprime = @(w) ' fname '(w,n,Fi,Fr,O,Q,R);']);
 
 [w, converged, curob] = maximise(f,fprime,w);
+
+w = null(v')*w;
 
 % remove temporary files
 delete([fname '.m']);
