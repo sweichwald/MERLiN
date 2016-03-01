@@ -31,6 +31,8 @@ This repository provides python and matlab implementations of the following algo
 * **MERLiNbp**: precision matrix based algorithm that works on iid sampled timeseries chunks and searches for a certain cause-effect relationship between the resulting log-bandpower features
 * **MERLiNbpicoh**: extends MERLiNbp by an imaginary coherency regularisation
 
+Note that the python implementation should be preferred over the matlab implementation. While the provided matlab implementation implements the algorithms MERLiN/-bp/-bpicoh as first described in the original manuscript, only the python implementation includes all newer modifications/extensions/improvements.
+
 The latter two algorithms may be applied to any type of timeseries data.
 In [this manuscript](http://arxiv.org/abs/1512.01255), for example, they have been employed in the analysis of EEG data.
 
@@ -88,6 +90,8 @@ The file [MERLiN_example.py](python3/MERLiN_example.py) provides a simple exampl
 
 
 ## matlab
+
+Note that the python implementation should be preferred over the matlab implementation. While the provided matlab implementation implements the algorithms MERLiN/-bp/-bpicoh as first described in the original manuscript, only the python implementation includes all newer modifications/extensions/improvements.
 
 The file [MERLiN_example.m](matlab/MERLiN_example.m) provides a simple example of use --- call `MERLiN_example` in matlab.
 
