@@ -44,33 +44,38 @@ The file [MERLiN_example.py](python3/MERLiN_example.py) provides a simple exampl
 
 ### get going
 
-The file [MERLiN_main.py](python3/MERLiN_main.py) provides the main functionality --- in a nutshell:
+The file [MERLiN.py](python3/MERLiN.py) provides the main functionality --- in a nutshell:
 
 ```python
-from MERLiN_main import MERLiN, MERLiNbp, MERLiNbpicoh
+from MERLiN import MERLiN
 
-#the basic algorithm
-#S: (m x 1) vector of samples of S
-#F: (d x m) matrix of linear mixture samples
-#v: (d x 1) vector corresponding to C1 in S->C1
-res = MERLiN(S,F,v)
+merlin = MERLiN()
 
-#the bp algorithms for iid sampled timeseries chunks
-#S: (m x 1) vector of samples of S
-#Ftw: (d x m x n) tensor containing timeseries of length n (d channels, m trials)
-#v: (d x 1) vector corresponding to C1 in S->C1
-#fs: sampling rate
-#omega1, omega2: low/high limit of desired frequency band
-res = MERLiNbp(S,Ftw,v,fs,omega1,omega2)
-res = MERLiNbpicoh(S,Ftw,v,fs,omega1,omega2)
+# the basic algorithm
+# S: (m x 1) np.array that contains the samples of S
+# F: (d x m) np.array that contains the linear mixture samples
+# v: (d x 1) np.array, the linear combination corresponding to C1 in S->C1,
+#     instead the middle node's samples arranged as (m x 1) np.array can
+#     also be handed over as optional argument C
+res = merlin.run(S, F, v=v)
 
-#the solution vector
+# the bp algorithms for iid sampled timeseries chunks
+# S: (m x 1) np.array that contains the samples of S
+# Ftw: (d x m x n) np.array that contains the linearly mixed timeseries of
+#       length n (d channels, m trials)
+# v: (d x 1) np.array, the linear combination corresponding to C1 in S->C1
+# fs: sampling rate
+# omega: tuple of (low, high) cut-off of desired frequency band
+res = merlin.run(S, Ftw, v=v, fs=fs, omega=omega)
+res = merlin.run(S, Ftw, v=v, fs=fs, omega=omega, variant='bpicoh')
+
+# the solution vector
 w = res[0]
 ```
 
 ### notes
 
-* Requires numpy, scipy, theano (install via pip3).
+* Requires numpy, scipy, theano, and [pymanopt](https://pymanopt.github.io/)
 * Tested with python3.4.3.
 * No validation of user input to functions.
 
@@ -113,5 +118,6 @@ w
 ### notes
 
 * Requires [ADiGator](http://adigator.sourceforge.net/) (tested with V1.1.1). Download and add to matlab search path via `addpath(genpath('/path/to/adigator'))`.
-* Tested with matlab R2014a.
+* Requires [Manopt](http://manopt.org/) (tested with V2.0). Download and add to matlab search path via `addpath(genpath('/path/to/manopt'))`.
+* Tested with Matlab R2014a.
 * No validation of user input to functions.
