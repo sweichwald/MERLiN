@@ -42,6 +42,6 @@ Ftw = genToyTimeseriesTensor(F, fs, n, omega1, omega2)
 
 
 # run MERLiNbp
-res = merlin.run(S, Ftw, v=v, fs=fs, omega=(omega1, omega2))
+res = merlin.run(S, Ftw, v=v, fs=fs, omega=(omega1, omega2), variant='nlbp')
 w = res[0]
 printres('MERLiNbp', T, d, m, a, b, w, wG0)
