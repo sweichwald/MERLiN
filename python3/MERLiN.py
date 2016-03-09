@@ -1,6 +1,5 @@
 from MERLiN_helper import complementbasis
 import numpy as np
-from theano import function # TODO
 import theano.tensor as T
 import theano.compile.sharedvalue as TS
 import theano.sandbox.linalg as Tlina
