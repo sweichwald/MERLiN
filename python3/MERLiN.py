@@ -116,9 +116,9 @@ class MERLiN:
             raise NotImplementedError
 
         if variant is not 'nlbp':
-            problem.manifold = Sphere(self._d)
+            problem.manifold = Sphere(self._d, 1)
         elif variant is 'nlbp':
-            problem.manifold = Product([Sphere(self._d), Euclidean(1, 1), Euclidean(1, 1)])
+            problem.manifold = Product([Sphere(self._d, 1), Euclidean(1, 1), Euclidean(1, 1)])
 
         # choose best out of ten 10-step runs as initialisation
         solver = SteepestDescent(maxiter=10, logverbosity=1)
