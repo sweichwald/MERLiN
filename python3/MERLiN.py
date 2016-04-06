@@ -111,7 +111,7 @@ class MERLiN:
         else:
             raise NotImplementedError
 
-        problem.manifold = Sphere(self._d)
+        problem.manifold = Sphere(self._d, 1)
 
         solver = SteepestDescent(maxtime=float('inf'), maxiter=maxiter,
                                  mingradnorm=0, minstepsize=tol,
