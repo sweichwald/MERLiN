@@ -432,7 +432,7 @@ class MERLiN:
 
             def median(x):
                 return T.switch(T.eq((x.shape[0] % 2), 0),
-                                T.mean(T.sort(x)[ ((x.shape[0]/2)-1) : ((x.shape[0]/2)+1) ]),
+                                T.mean(T.sort(x)[ ((x.shape[0]//2)-1) : ((x.shape[0]//2)+1) ]),
                                 T.sort(x)[x.shape[0]//2])
 
             def kernmat(x, y, sig=None):
