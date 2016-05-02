@@ -30,10 +30,11 @@ This repository provides python and matlab implementations of the following algo
 * **MERLiN**: precision matrix based algorithm that works on iid samples
 * **MERLiNbp**: precision matrix based algorithm that works on iid sampled timeseries chunks and searches for a certain cause-effect relationship between the resulting log-bandpower features
 * **MERLiNbpicoh**: extends MERLiNbp by an imaginary coherency regularisation
+* **MERLiNnlbp**: non-linear extension of the MERLiNbp algorithm (Python only)
 
 Note that the python implementation should be preferred over the matlab implementation. While the provided matlab implementation implements the algorithms MERLiN/-bp/-bpicoh as first described in the original manuscript, only the python implementation includes all newer modifications/extensions/improvements.
 
-The latter two algorithms may be applied to any type of timeseries data.
+The MERLiN*bp* algorithms may be applied to any type of timeseries data.
 In [this manuscript](http://arxiv.org/abs/1512.01255), for example, they have been employed in the analysis of EEG data.
 
 
@@ -70,6 +71,7 @@ res = merlin.run(S, F, v=v)
 # omega: tuple of (low, high) cut-off of desired frequency band
 res = merlin.run(S, Ftw, v=v, fs=fs, omega=omega)
 res = merlin.run(S, Ftw, v=v, fs=fs, omega=omega, variant='bpicoh')
+res = merlin.run(S, Ftw, v=v, fs=fs, omega=omega, variant='nlbp')
 
 # the solution vector
 w = res[0]
