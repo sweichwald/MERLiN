@@ -164,29 +164,3 @@ def pobv(wG0, w):
 def andi(wG0, w):
     # angular distance
     return min(angle(wG0, w), angle(-wG0, w))
-
-
-class linesearch(object):
-    # linesearch to hand over to pymanopt
-    def __init__(self, minstepsize=1e-16):
-        self._contraction_factor = .7
-        self._initial_stepsize = 1
-        self._minstepsize = minstepsize
-
-    def search(self, objective, man, x, d, f0, df0):
-        norm_d = man.norm(x, d)
-        alpha = self._initial_stepsize / norm_d
-
-        newx = man.retr(x, alpha * d)
-        newf = objective(newx)
-
-        # while there is no decrease, i.e. step too large
-        while newf > f0 and alpha * norm_d > self._minstepsize:
-            alpha *= self._contraction_factor
-            newx = man.retr(x, alpha * d)
-            newf = objective(newx)
-        if newf > f0:
-            alpha = 0
-            newx = x
-        stepsize = alpha * norm_d
-        return stepsize, newx

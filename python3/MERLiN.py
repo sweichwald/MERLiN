@@ -1,10 +1,10 @@
-from MERLiN_helper import complementbasis, linesearch
+from MERLiN_helper import complementbasis
 import numpy as np
 import theano.tensor as T
 import theano.compile.sharedvalue as TS
 import theano.sandbox.linalg as Tlina
 from pymanopt import Problem
-from pymanopt.manifolds import Sphere
+from pymanopt.manifolds import Sphere, Euclidean, Product
 from pymanopt.solvers import SteepestDescent
 
 
@@ -28,10 +28,11 @@ class MERLiN:
         '''
         self._problem_MERLiNbp_val = None
         self._problem_MERLiNbpicoh_val = None
+        self._problem_MERLiNnlbp_val = None
         self._verbosity = verbosity
 
     def run(self, S, F, v=None, C=None, fs=None, omega=None,
-            maxiter=500, tol=1e-16, variant='bp'):
+            maxiter=500, tol=1e-10, variant='bp'):
         '''
         Run MERLiN algorithm.
         Whether to run a scalar variant, i.e. S -> C -> w'F, or a
@@ -58,11 +59,12 @@ class MERLiN:
             - maxiter (500)
                 maximum iterations to run the optimisation algorithm for
             - tol (1e-16)
-                terminate optimisation if step size < tol
+                terminate optimisation if step size < tol or grad norm < tol
             - variant ('bp')
                 determines which MERLiN variant to use on timeseries data
                 ('bp' = MERLiNbp algorithm ([1], Algorithm 4),
-                 'bpicoh' = MERLiNbpicoh algorithm ([1], Algorithm 5))
+                 'bpicoh' = MERLiNbpicoh algorithm ([1], Algorithm 5),
+                 'nlbp' = MERLiNnlbp)
 
         Output
             - w
@@ -108,18 +110,30 @@ class MERLiN:
             problem = self._problem_MERLiNbp()
         elif variant is 'bpicoh':
             problem = self._problem_MERLiNbpicoh()
+        elif variant is 'nlbp':
+            problem = self._problem_MERLiNnlbp()
         else:
             raise NotImplementedError
 
-        problem.manifold = Sphere(self._d, 1)
+        if variant is not 'nlbp':
+            problem.manifold = Sphere(self._d, 1)
+        elif variant is 'nlbp':
+            problem.manifold = Product([Sphere(self._d, 1), Euclidean(1, 1), Euclidean(1, 1)])
+
+        # choose best out of ten 10-step runs as initialisation
+        solver = SteepestDescent(maxiter=10, logverbosity=1)
+        res = [solver.solve(problem) for k in range(0, 10)]
+        obs = [-r[1]['final_values']['f(x)'] for r in res]
+        w0 = res[obs.index(max(obs))][0]
 
         solver = SteepestDescent(maxtime=float('inf'), maxiter=maxiter,
-                                 mingradnorm=0, minstepsize=tol,
-                                 linesearch=linesearch(tol),
+                                 mingradnorm=tol, minstepsize=tol,
                                  logverbosity=1)
         if self._verbosity:
             print('Running optimisation algorithm.')
-        w, info = solver.solve(problem)
+        w, info = solver.solve(problem, x=w0)
+        if variant is 'nlbp':
+            w = w[0]
         converged = maxiter != info['final_values']['iterations']
         curob = -float(info['final_values']['f(x)'])
         if self._verbosity:
@@ -157,7 +171,7 @@ class MERLiN:
             if self._verbosity:
                 print('The scalar samples of the middle node were '
                       'provided.')
-            self._P = np.eye(self._F.shape[0])
+            self._P = np.eye(self._d)
             self._C = C
             self._F = self._Forig
         # extract the samples
@@ -278,7 +292,7 @@ class MERLiN:
             Fr = self._T_Fr = TS.shared(self._F[1].reshape(self._d, -1))
             n = self._T_n = TS.shared(self._n)
             w = T.matrix()
-            m = S.shape[0]
+            m = self._m
             # linear combination
             wFr = T.reshape(w.T.dot(Fr), (m, -1))  # m x n'
             wFi = T.reshape(w.T.dot(Fi), (m, -1))  # m x n'
@@ -355,3 +369,117 @@ class MERLiN:
         algorithm ([1], Algorithm 5).
         '''
         return self._problem_MERLiNbp(icoh=True)
+
+    def _problem_MERLiNnlbp(self):
+        '''
+        Set up cost function and return pymanopt problem of the non-linear
+        MERLiNbp algorithm MERLiNnlbp.
+
+        Sets/updates self._problem_MERLiNnlbp_val
+        and the shared theano variables
+        self._T_S, self._T_n, self._T_Vi123, self._T_Vr123, self._T_Fi123,
+        self._T_Fr123
+        '''
+        if self._problem_MERLiNnlbp_val is None:
+            S = self._T_S = TS.shared(self._S)
+            n = self._T_n = TS.shared(self._n)
+            # random three-split
+            indices = [list(range(self._m))[i::3] for i in range(3)]
+            Vi1 = self._T_Vi1 = TS.shared(self._C[0][indices[0], :])
+            Vi2 = self._T_Vi2 = TS.shared(self._C[0][indices[1], :])
+            Vi3 = self._T_Vi3 = TS.shared(self._C[0][indices[2], :])
+            Vr1 = self._T_Vr1 = TS.shared(self._C[1][indices[0], :])
+            Vr2 = self._T_Vr2 = TS.shared(self._C[1][indices[1], :])
+            Vr3 = self._T_Vr3 = TS.shared(self._C[1][indices[2], :])
+            Fi1 = self._T_Fi1 = TS.shared(self._F[0][:, indices[0], :].reshape(self._d, -1))
+            Fi2 = self._T_Fi2 = TS.shared(self._F[0][:, indices[1], :].reshape(self._d, -1))
+            Fi3 = self._T_Fi3 = TS.shared(self._F[0][:, indices[2], :].reshape(self._d, -1))
+            Fr1 = self._T_Fr1 = TS.shared(self._F[1][:, indices[0], :].reshape(self._d, -1))
+            Fr2 = self._T_Fr2 = TS.shared(self._F[1][:, indices[1], :].reshape(self._d, -1))
+            Fr3 = self._T_Fr3 = TS.shared(self._F[1][:, indices[2], :].reshape(self._d, -1))
+            w = T.matrix()
+            sigma_signed = T.matrix()
+            sigma = T.abs_(sigma_signed[0, 0])
+            theta_signed = T.matrix()
+            theta = T.abs_(theta_signed[0, 0])
+            m = self._m
+            # linear combination
+            wFr1 = T.reshape(w.T.dot(Fr1), (Vr1.shape[0], -1))  # m1 x n'
+            wFi1 = T.reshape(w.T.dot(Fi1), (Vi1.shape[0], -1))  # m1 x n'
+            wFr2 = T.reshape(w.T.dot(Fr2), (Vr2.shape[0], -1))  # m2 x n'
+            wFi2 = T.reshape(w.T.dot(Fi2), (Vi2.shape[0], -1))  # m2 x n'
+            wFr3 = T.reshape(w.T.dot(Fr3), (Vr3.shape[0], -1))  # m3 x n'
+            wFi3 = T.reshape(w.T.dot(Fi3), (Vi3.shape[0], -1))  # m3 x n'
+
+            # replace zeros, since we're taking logs
+            def unzero(x):
+                return T.switch(T.eq(x, 0), 1, x)
+
+            # bandpower
+            def bp(re, im):
+                return T.reshape(T.mean(
+                    T.log(unzero(T.sqrt(re*re + im*im))) - T.log(n),
+                    axis=1), (re.shape[0], 1))
+
+            wFbp1 = bp(wFr1, wFi1)  # m1 x 1
+            wFbp2 = bp(wFr2, wFi2)  # m2 x 1
+            wFbp3 = bp(wFr3, wFi3)  # m3 x 1
+            wFbp = T.concatenate([wFbp1, wFbp2, wFbp3])  # (m1+m2+m3 x 1)
+            vFbp1 = bp(Vr1, Vi1)    # m1 x 1
+            vFbp2 = bp(Vr2, Vi2)    # m2 x 1
+            vFbp3 = bp(Vr3, Vi3)    # m3 x 1
+            vFbp = T.concatenate([vFbp1, vFbp2, vFbp3])  # (m1+m2+m3 x 1)
+
+            def median(x):
+                return T.switch(T.eq((x.shape[0] % 2), 0),
+                                T.mean(T.sort(x)[ ((x.shape[0]/2)-1) : ((x.shape[0]/2)+1) ]),
+                                T.sort(x)[x.shape[0]//2])
+
+            def kernmat(x, y, sig=None):
+                xx = T.sum(x**2, axis=1, keepdims=True)
+                yy = T.sum(y**2, axis=1, keepdims=True).T
+                diffsq = xx + yy -2*x.dot(y.T)
+                if sig is None:
+                    # only use 100 samples or less
+                    subdiffsq = diffsq[:T.min([diffsq.shape[0], 100]),
+                                       :T.min([diffsq.shape[1], 100])]
+                    # correct for the diagonal of zeros
+                    sig = median(T.concatenate([subdiffsq.flatten(), subdiffsq.diagonal() + 1e10]))
+                return T.exp(-diffsq/sig)
+
+            def kreg(xtrain, ytrain, xtest):
+                return kernmat(xtest, xtrain, sigma).dot(
+                    Tlina.matrix_inverse(kernmat(xtrain, xtrain, sigma) +
+                                         theta*T.eye(xtrain.shape[0])
+                                         ).dot(ytrain))
+
+            # regression residuals
+            resi1 = (kreg(
+                T.concatenate([vFbp2, vFbp3]),
+                T.concatenate([wFbp2, wFbp3]),
+                vFbp1) - wFbp1)
+            resi2 = (kreg(
+                T.concatenate([vFbp1, vFbp3]),
+                T.concatenate([wFbp1, wFbp3]),
+                vFbp2) - wFbp2)
+            resi3 = (kreg(
+                T.concatenate([vFbp1, vFbp2]),
+                T.concatenate([wFbp1, wFbp2]),
+                vFbp3) - wFbp3)
+            resi = T.concatenate([resi1, resi2, resi3])
+
+            def hsic(x, y):
+                K = kernmat(x, x)
+                L = kernmat(y, y)
+                H = T.eye(m)-T.mean(T.eye(m))
+                # omit (m-1)^-2 factor
+                return (K.dot(H.dot(L.dot(H)))).trace()
+
+            cost = -(hsic(vFbp, wFbp) - hsic(T.concatenate([S, vFbp], axis=1), resi))
+
+            self._problem_MERLiNnlbp_val = Problem(manifold=None,
+                                                   cost=cost, verbosity=2,
+                                                   arg=[w, sigma_signed, theta_signed])
+        else:
+            raise NotImplementedError
+        return self._problem_MERLiNnlbp_val
