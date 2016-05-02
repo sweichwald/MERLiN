@@ -478,7 +478,7 @@ class MERLiN:
             cost = -(hsic(vFbp, wFbp) - hsic(T.concatenate([S, vFbp], axis=1), resi))
 
             self._problem_MERLiNnlbp_val = Problem(manifold=None,
-                                                   cost=cost, verbosity=2,
+                                                   cost=cost, verbosity=0,
                                                    arg=[w, sigma_signed, theta_signed])
         else:
             raise NotImplementedError
