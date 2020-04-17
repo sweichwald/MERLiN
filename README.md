@@ -7,9 +7,9 @@ MERLiN implements a novel idea on how to (re-)construct causal variables and is 
 
 As a motivational example consider the following causal structure
 
-![examplegraph](http://sweichwald.bplaced.net/MERLiN/examplegraph.png)
+![examplegraph](examplegraph.png)
 
-where S is a randomised variable, C=[C1,...,Cd]' are causal variables, and h is a hidden confounder.
+where S is a randomised variable, C=[C1,...,Cd]' are causal variables, and h1 is a hidden confounder.
 Often the causal variables C1,...,Cd cannot be measured directly but only a linear mixture F=[F1,...,Fd]'=AC thereof can be observed.
 In such scenarios, MERLiN is still able to establish the cause-effect relationship C1→C2.
 Given
